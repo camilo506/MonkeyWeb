@@ -1,6 +1,6 @@
 let pendingFile = '';
 
-const HASHED_PASSWORD = '3b0d46dd961f7481f9b37d45543c8d35f414731f92e3a137b0191faed121338b';
+const HASHED_PASSWORD = '41cae26947c600c524116ca4be818f76563f858f09a0ad67789515c78a0c239a';
 
 async function hashPassword(string) {
     const utf8 = new TextEncoder().encode(string);
@@ -22,24 +22,47 @@ function closeModal() {
 }
 
 async function verifyPassword() {
-    const input = document.getElementById('targetPassword').value;
-    const inputHash = await hashPassword(input);
-
-    if (inputHash === HASHED_PASSWORD) {
-        const link = document.createElement('a');
-        link.href = 'descargas/' + pendingFile;
-        link.download = pendingFile;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        closeModal();
-    } else {
-        const error = document.getElementById('passwordError');
-        error.style.display = 'block';
-        const modal = document.querySelector('.password-modal');
-        modal.classList.add('shake');
-        setTimeout(() => modal.classList.remove('shake'), 500);
+    const input = document.getElementById('targetPassword').value.trim().toLowerCase();
+    
+    // Direct check for the chosen password to ensure it works in all environments
+    if (input === 'monkeystudio') {
+        proceedWithDownload();
+        return;
     }
+
+    if (!crypto.subtle) {
+        alert("Clave incorrecta o navegador no compatible.");
+        return;
+    }
+
+    try {
+        const inputHash = await hashPassword(input);
+        if (inputHash === HASHED_PASSWORD) {
+            proceedWithDownload();
+        } else {
+            showError();
+        }
+    } catch (e) {
+        showError();
+    }
+}
+
+function proceedWithDownload() {
+    const link = document.createElement('a');
+    link.href = 'descargas/' + pendingFile;
+    link.download = pendingFile;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    closeModal();
+}
+
+function showError() {
+    const error = document.getElementById('passwordError');
+    error.style.display = 'block';
+    const modal = document.querySelector('.password-modal');
+    modal.classList.add('shake');
+    setTimeout(() => modal.classList.remove('shake'), 500);
 }
 
 // Handle Enter key
